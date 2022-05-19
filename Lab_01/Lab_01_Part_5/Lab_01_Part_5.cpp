@@ -50,16 +50,16 @@ int main() {
 
     // Прямой ход метода Гаусса
     for (int i = 0; i < raw; i++) {
-        int j, k;
+        //int j, k;
         float temp = myArray[i][i];
 
-        for (j = raw; j >= i; j--) myArray[i][j] /= temp;
+        for (int j = raw; j >= i; j--) myArray[i][j] /= temp;
+        
+#pragma omp parallel for //private (j, k, temp) Архаизм от C
+        for (int j = i + 1; j < raw; j++) {
+            float temp = myArray[j][i];
 
-#pragma omp parallel for private (j, k, temp)
-        for (j = i + 1; j < raw; j++) {
-            temp = myArray[j][i];
-
-            for (k = raw; k >= i; k--) myArray[j][k] -= temp * myArray[i][k];
+            for (int k = raw; k >= i; k--) myArray[j][k] -= temp * myArray[i][k];
         }
     }
 
