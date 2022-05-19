@@ -1,6 +1,7 @@
 ﻿#include <omp.h>
 #include <iostream>
 #include <math.h>
+#include <time.h>
 
 using namespace std;
 
@@ -10,6 +11,10 @@ int main() {
     setlocale(LC_ALL, "rus");
     system("chcp 1251");
     system("cls");
+
+    clock_t t;
+
+    t = clock();
 
     int raw, column;
 
@@ -23,10 +28,8 @@ int main() {
 
     float** myArray = new float* [raw];
 
-#pragma omp parallel for
     for (int i = 0; i < raw; i++) myArray[i] = new float[column];
 
-#pragma omp parallel for
     for (int i = 0; i < raw; i++) {
         for (int j = 0; j < column; j++) {
             cout << "Ввод элемента " << "[" << i + 1 << " , " << j + 1 << "] > ";
@@ -35,10 +38,8 @@ int main() {
         }
     }
 
-    //выводим массив
     cout << "Заданная матрица:" << endl;
 
-#pragma omp parallel for
     for (int i = 0; i < raw; i++) {
         for (int j = 0; j < column; j++) cout << myArray[i][j] << " ";
 
@@ -48,15 +49,17 @@ int main() {
     cout << endl;
 
     // Прямой ход метода Гаусса
-#pragma omp parallel for
     for (int i = 0; i < raw; i++) {
+        int j, k;
         float temp = myArray[i][i];
 
-        for (int j = raw; j >= i; j--) myArray[i][j] /= temp;
-        for (int j = i + 1; j < raw; j++) {
+        for (j = raw; j >= i; j--) myArray[i][j] /= temp;
+
+#pragma omp parallel for private (j, k, temp)
+        for (j = i + 1; j < raw; j++) {
             temp = myArray[j][i];
 
-            for (int k = raw; k >= i; k--) myArray[j][k] -= temp * myArray[i][k];
+            for (k = raw; k >= i; k--) myArray[j][k] -= temp * myArray[i][k];
         }
     }
 
@@ -64,7 +67,6 @@ int main() {
     float* newArray = new float[column];
     newArray[raw - 1] = myArray[raw - 1][raw];
 
-#pragma omp parallel for
     for (int i = raw - 2; i >= 0; i--) {
         newArray[i] = myArray[i][raw];
 
@@ -72,13 +74,16 @@ int main() {
     }
 
     // Вывод результата
-#pragma omp parallel for
     for (int i = 0; i < raw; i++) cout << newArray[i] << " ";
 
     cout << endl;
 
     delete[] myArray;
     delete[] newArray;
+
+    t = clock() - t;
+
+    cout << t << endl;
 
     return 0;
 }
